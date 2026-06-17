@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Claude Code internal directory
+.claude/
+
+# Environment variables
+.env
+.env.*
+!.env.example

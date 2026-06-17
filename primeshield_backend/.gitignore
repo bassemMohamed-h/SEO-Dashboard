@@ -1,0 +1,37 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django generated files
+*.sqlite3
+/static/
+/media/
+
+# Local settings override (referenced in dev.py but never committed)
+backend/settings/local.py
+
+# Gunicorn runtime socket
+gunicorn.ctl
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+wheels/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp

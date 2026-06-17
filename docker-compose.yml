@@ -1,19 +1,4 @@
-version: "3.9"
-
 services:
-  frontend:
-    build:
-      context: ./PrimeShield
-      dockerfile: Dockerfile
-    volumes:
-      - ./PrimeShield:/usr/src/app:cached
-      - /usr/src/app/node_modules
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
-
   backend:
     build:
       context: ./primeshield_backend
@@ -26,5 +11,19 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings.dev
       - PYTHONUNBUFFERED=1
+
+  frontend:
+    build:
+      context: ./PrimeShield
+      dockerfile: Dockerfile
+    volumes:
+      - ./PrimeShield:/usr/src/app:cached
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_WAGTAIL_API_URL=http://backend:8000/api/v2
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
     depends_on:
-      - frontend
+      - backend
