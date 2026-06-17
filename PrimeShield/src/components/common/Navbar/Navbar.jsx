@@ -94,6 +94,15 @@ export default function Navbar({ menuPages = [] }) {
               حساباتنا
             </Link>
 
+            <Link
+              href="/blogs"
+              className={`${styles.link} ${
+                pathname.startsWith("/blogs") ? styles.active : ""
+              }`}
+            >
+              المدونة
+            </Link>
+
             {/* Dynamic pages from Wagtail (show_in_menus = true) */}
             {menuPages.map((page) => {
               const slug = page.meta?.slug || page.slug;
@@ -157,6 +166,10 @@ export default function Navbar({ menuPages = [] }) {
             
             <Link href="/contact" onClick={() => setMenuOpen(false)}>
               حساباتنا
+            </Link>
+
+            <Link href="/blogs" onClick={() => setMenuOpen(false)}>
+              المدونة
             </Link>
 
             {/* Dynamic pages from Wagtail (show_in_menus = true) */}
