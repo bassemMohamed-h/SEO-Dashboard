@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 from wagtail.models import Page
-from wagtail.fields import StreamField
+from wagtail.fields import StreamField, RichTextField
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel
 from wagtail.api import APIField
@@ -146,4 +146,53 @@ class BlogPage(Page):
     class Meta:
         verbose_name = "Blog Post"
         verbose_name_plural = "Blog Posts"
+        ordering = ['-date']
+
+
+# ─── Civilia News ─────────────────────────────────────────────────────────────
+
+class CiviliaNewsIndexPage(Page):
+    """Container page that holds all CiviliaNewsPage children."""
+
+    subpage_types = ['home.CiviliaNewsPage']
+    content_panels = Page.content_panels
+
+    class Meta:
+        verbose_name = "Civilia News Index"
+
+
+class CiviliaNewsPage(Page):
+    date = models.DateField("Post date", default=datetime.date.today)
+    excerpt = models.TextField(
+        blank=True,
+        help_text="Short description shown on the news listing cards.",
+    )
+    cover_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    content = RichTextField(blank=True)
+
+    parent_page_types = ['home.CiviliaNewsIndexPage']
+
+    content_panels = Page.content_panels + [
+        FieldPanel('date'),
+        FieldPanel('excerpt'),
+        FieldPanel('cover_image'),
+        FieldPanel('content'),
+    ]
+
+    api_fields = [
+        APIField('date'),
+        APIField('excerpt'),
+        APIField('cover_image', serializer=ImageRenditionField('fill-800x450')),
+        APIField('content'),
+    ]
+
+    class Meta:
+        verbose_name = "Civilia News Post"
+        verbose_name_plural = "Civilia News Posts"
         ordering = ['-date']
