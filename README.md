@@ -1,54 +1,57 @@
-# PrimeShield Docker Setup
+# SEO Admin Dashboard — Backend
 
-This repository includes a `docker-compose.yml` file to run both the frontend and backend together using Docker.
+Centralized Wagtail CMS backend that manages content for multiple websites. Frontend sites live on separate servers and consume content via the Wagtail REST API.
+
+## What's in this repo
+
+```
+SEO-Dashboard/
+├── admindashboard/          # Django / Wagtail CMS backend
+├── docker-compose.prod.yml  # Production: backend + PostgreSQL
+├── .env.example             # Environment variables template
+├── README.md
+└── OVERVIEW.md
+```
+
+## Deploy to production
+
+**1. Create your `.env` from the template:**
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` — at minimum set `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD`.
+
+**2. Build and start:**
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+```
+
+**3. Create a superuser (first time only):**
+
+```bash
+docker compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
+```
+
+**4. Stop:**
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
 
 ## Services
 
-- `frontend`: Next.js application in `PrimeShield/`
-- `backend`: Django/Wagtail application in `admindashboard/`
+| Service | URL | Description |
+|---|---|---|
+| Wagtail Admin | `http://<host>:8000/admin` | Content management |
+| Wagtail API | `http://<host>:8000/api/v2/` | REST API for frontends |
 
-## Start with Docker
+## Architecture decisions
 
- run:
-
-```bash
-docker compose up --build
-```
-
-This will:
-- build the frontend and backend images
-- mount local source code into each container
-- start the frontend on `http://localhost:3000`
-- start the backend on `http://localhost:8000`
-
-## Stop
-
-Use:
-
-```bash
-docker compose down
-```
-
-## Notes
-
-- The frontend container is configured to run `npm run dev`.
-- The backend container uses the existing Python virtual environment setup from `admindashboard/Dockerfile`.
-- If you change ports or service names, update `docker-compose.yml` accordingly.
-
-## How to deploy:
-
-# 1. Create your .env from the template
-cp .env.example .env
-# Edit .env — at minimum set DJANGO_SECRET_KEY and POSTGRES_PASSWORD
-
-# 2. Build and start
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
-
-# 3. Create a superuser (first time only)
-docker compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
-Key design decisions:
-
-depends_on: condition: service_healthy — backend won't start until Postgres passes its health check, so migrations never race against a not-yet-ready DB
-whitenoise serves static files directly from Gunicorn — no Nginx needed for this setup
-Media uploads stored in a named Docker volume (media_data) so they survive container rebuilds
-The dev docker-compose.yml is untouched — it still uses SQLite and dev settings
+- **PostgreSQL** — replaces SQLite for production reliability
+- **`depends_on: service_healthy`** — backend waits for Postgres to pass its health check before running migrations
+- **WhiteNoise** — serves static files directly from Gunicorn, no Nginx needed
+- **Named Docker volumes** — `postgres_data` and `media_data` survive container rebuilds
+- **Multi-site** — one backend manages any number of frontend websites deployed on separate servers

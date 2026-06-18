@@ -1,28 +1,37 @@
 # SEO Dashboard — Project Overview
 
-A centralized CMS & SEO admin dashboard for managing multiple websites from a single control panel. Built on a headless architecture: **Wagtail CMS** powers the backend content management, and **Next.js** drives each managed website as a fast, SEO-optimized frontend.
+A centralized CMS & SEO admin dashboard for managing multiple websites from a single control panel. Built on a headless architecture: **Wagtail CMS** powers the backend content management, and **Next.js** drives each managed website as a fast, SEO-optimized frontend deployed on its own server.
 
 ---
 
 ## Purpose
 
-Instead of logging into a separate admin panel for every website, editors and SEO managers use one dashboard (Wagtail admin) to create, update, and publish content across any number of sites. Each website consumes content via a REST API, so the frontend is fully decoupled and can be deployed independently.
+Instead of logging into a separate admin panel for every website, editors and SEO managers use one dashboard (Wagtail admin) to create, update, and publish content across any number of sites. Each website consumes content via a REST API, so the frontend is fully decoupled and deployed independently.
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────┐       ┌───────────────────────────┐
-│   Wagtail Admin (Django)        │  API  │   Next.js Frontend        │
-│   /admin  —  port 8000          │──────▶│   primeshield.com         │
-│                                 │       │   port 3000               │
-│  • Content editing              │       │                           │
-│  • Page tree management         │       │  • SSR / SEO-optimized    │
-│  • Image / document library     │       │  • Dynamic [slug] routing │
-│  • Multi-site support           │       │  • Bilingual (AR / EN)    │
-│  • REST API (Wagtail API v2)    │       │  • Sitemap auto-generated │
-└─────────────────────────────────┘       └───────────────────────────┘
+┌──────────────────────────────────────┐
+│   SEO Admin Dashboard (this repo)    │
+│   Django + Wagtail — port 8000       │
+│   PostgreSQL database                │
+│                                      │
+│  • Content editing & publishing      │
+│  • Image / document library          │
+│  • Multi-site support                │
+│  • REST API (Wagtail API v2)         │
+└──────────┬───────────────────────────┘
+           │  HTTP API  (per-site CORS)
+     ┌─────┴──────────────────────────────────┐
+     │                                        │
+     ▼                                        ▼
+┌─────────────────────┐          ┌─────────────────────┐
+│  Next.js Site A     │          │  Next.js Site B      │
+│  primeshield.com.sa │          │  civilia.com  (etc.) │
+│  (separate server)  │          │  (separate server)   │
+└─────────────────────┘          └─────────────────────┘
 ```
 
 ---
@@ -32,126 +41,95 @@ Instead of logging into a separate admin panel for every website, editors and SE
 | Layer | Technology |
 |---|---|
 | CMS / Admin | Wagtail 7.4 + Django 6 |
-| API | Wagtail API v2 (pages, images, documents) |
-| Frontend | Next.js 16 + React 19 |
-| Styling | CSS Modules |
-| Animations | AOS, Framer Motion, GSAP |
-| Email | EmailJS |
-| i18n | JSON message files (Arabic / English) |
-| Database | SQLite (dev) |
+| API | Wagtail API v2 — custom `MultiSitePagesAPIViewSet` |
+| Database | PostgreSQL 16 (production) |
+| Static files | WhiteNoise (served directly from Gunicorn) |
+| App server | Gunicorn |
 | Containerization | Docker + Docker Compose |
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
 SEO-Dashboard/
-├── docker-compose.yml              # Orchestrates frontend + backend
+├── docker-compose.prod.yml         # Production: backend + PostgreSQL
+├── .env.example                    # All environment variable docs
 │
-├── PrimeShield/                    # Next.js managed website
-│   └── src/
-│       ├── app/                    # Page routes
-│       │   ├── page.js             # Home
-│       │   ├── about/
-│       │   ├── services/
-│       │   ├── projects/
-│       │   ├── certificates/
-│       │   ├── contact/
-│       │   ├── [slug]/             # Dynamic CMS-driven pages
-│       │   └── sitemap.js          # Auto-generated sitemap
-│       ├── components/
-│       │   ├── common/             # Navbar, container, AOS provider
-│       │   └── sections/           # Page sections (Hero, About, Services, …)
-│       └── messages/
-│           ├── ar.json             # Arabic translations
-│           └── en.json             # English translations
-│
-└── admindashboard/            # Django / Wagtail CMS
+└── admindashboard/                 # Django / Wagtail backend
+    ├── Dockerfile                  # Multi-stage build (builder + runtime)
+    ├── entrypoint.sh               # migrate → gunicorn on container start
+    ├── requirements.txt
+    ├── manage.py
     ├── backend/
-    │   ├── settings/               # base / dev / production configs
-    │   ├── api.py                  # Wagtail API router (pages, images, docs)
-    │   └── urls.py
+    │   ├── settings/
+    │   │   ├── base.py             # Shared settings
+    │   │   ├── dev.py              # Local dev (SQLite)
+    │   │   └── production.py       # Production (PostgreSQL, WhiteNoise, env vars)
+    │   ├── api.py                  # MultiSitePagesAPIViewSet + router
+    │   ├── urls.py
+    │   └── wsgi.py
     ├── home/
-    │   └── models.py               # Page models with StreamFields
-    └── search/
-        └── views.py
+    │   ├── models.py               # All page models (multi-site)
+    │   └── migrations/
+    ├── search/
+    │   └── views.py
+    └── media/                      # User-uploaded files (volume-mounted in prod)
 ```
 
 ---
 
-## Content Models
+## Page Models
 
-Content is built with Wagtail **StreamFields**, giving editors flexible, block-based page layouts.
+| Model | Site | Description |
+|---|---|---|
+| `PrimeShieldHomePage` | primeshield.com.sa | Home page with hero, services, projects |
+| `CiviliaNewsIndexPage` | civilia site | News listing index |
+| `CiviliaNewsPage` | civilia site | Individual news article with cover image + rich text |
+| `StandardPage` | any | Generic rich-text page |
 
-| Model | Blocks |
-|---|---|
-| `HomePage` | Hero, About, Vision (slider), Services (grid) |
-| `StandardPage` | RichText, Hero |
-
-Each block exposes its data through the Wagtail API, which the Next.js frontend consumes at build time or request time.
+New sites are added by creating a Wagtail `Site` record pointing to a root page, then building a Next.js frontend that fetches from `GET /api/v2/pages/?type=home.YourModel`.
 
 ---
 
-## API Endpoints
+## API
 
-Provided by Wagtail API v2 at `http://localhost:8000/api/v2/`:
+Base URL: `http://<host>:8000/api/v2/`
 
 | Endpoint | Description |
 |---|---|
-| `/api/v2/pages/` | All CMS pages with content |
-| `/api/v2/images/` | Media library |
-| `/api/v2/documents/` | Uploaded documents |
+| `GET /api/v2/pages/` | All published pages across all sites |
+| `GET /api/v2/pages/?type=home.CiviliaNewsPage` | Filter by page type |
+| `GET /api/v2/pages/?slug=blog-1` | Fetch by slug |
+| `GET /api/v2/images/` | Media library |
+| `GET /api/v2/documents/` | Uploaded documents |
 
----
-
-## Running the Project
-
-**With Docker (recommended):**
-
-```bash
-docker compose up --build
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:3000 |
-| Wagtail Admin | http://localhost:8000/admin |
-| Wagtail API | http://localhost:8000/api/v2/ |
-
-**Without Docker:**
-
-```bash
-# Backend
-cd admindashboard
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-
-# Frontend
-cd PrimeShield
-npm install
-npm run dev
-```
+The `MultiSitePagesAPIViewSet` skips Wagtail's default single-site filter, so all sites' pages are accessible from one endpoint. Pass `?site=hostname:port` to scope results to one site.
 
 ---
 
 ## Managed Websites
 
-| Website | Frontend Directory | Notes |
-|---|---|---|
-| PrimeShield | `PrimeShield/` | Saudi waterproofing & insulation company — bilingual (AR/EN) |
+| Website | Domain | Stack | Server |
+|---|---|---|---|
+| PrimeShield | primeshield.com.sa | Next.js 16, bilingual AR/EN | separate |
+| Civilia | — | Next.js + next-intl, bilingual AR/EN | separate |
 
-> Additional websites are added as new Next.js apps pointing at the same Wagtail backend, taking advantage of Wagtail's built-in multi-site support.
+> Adding a new website = new Wagtail `Site` + new page models + a new Next.js app deployed anywhere.
 
 ---
 
-## Key SEO Features
+## Production Deployment
 
-- **Server-side rendering** via Next.js for fast initial loads and crawler-friendly HTML
-- **Auto-generated sitemap** (`/sitemap.js`) fed from CMS page tree
-- **Dynamic `[slug]` routing** — new CMS pages are live immediately without frontend deploys
-- **Bilingual support** (Arabic / English) with locale-aware content from the CMS
-- **`robots.txt`** managed in the public directory
-- **Clean URL structure** driven by Wagtail's page tree
+```bash
+# 1. Configure secrets
+cp .env.example .env   # then fill in DJANGO_SECRET_KEY, POSTGRES_PASSWORD, etc.
+
+# 2. Build & start
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+
+# 3. First-time superuser
+docker compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
+```
+
+Postgres data and uploaded media are stored in named Docker volumes and survive restarts and rebuilds.

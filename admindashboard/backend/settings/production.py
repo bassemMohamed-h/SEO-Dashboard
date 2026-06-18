@@ -22,6 +22,8 @@ DATABASES = {
     }
 }
 
+INSTALLED_APPS = list(INSTALLED_APPS) + ["django.contrib.postgres"]
+
 # WhiteNoise for static files — insert right after SecurityMiddleware
 MIDDLEWARE = list(MIDDLEWARE)
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
