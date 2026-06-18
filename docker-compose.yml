@@ -1,11 +1,11 @@
 services:
   backend:
     build:
-      context: ./primeshield_backend
+      context: ./admindashboard
       dockerfile: Dockerfile
     volumes:
-      - ./primeshield_backend:/app:cached
-      - ./primeshield_backend/db.sqlite3:/app/db.sqlite3
+      - ./admindashboard:/app:cached
+      - ./admindashboard/db.sqlite3:/app/db.sqlite3
     ports:
       - "8000:8000"
     environment:

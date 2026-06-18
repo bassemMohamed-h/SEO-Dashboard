@@ -5,7 +5,7 @@ This repository includes a `docker-compose.yml` file to run both the frontend an
 ## Services
 
 - `frontend`: Next.js application in `PrimeShield/`
-- `backend`: Django/Wagtail application in `primeshield_backend/`
+- `backend`: Django/Wagtail application in `admindashboard/`
 
 ## Start with Docker
 
@@ -32,5 +32,5 @@ docker compose down
 ## Notes
 
 - The frontend container is configured to run `npm run dev`.
-- The backend container uses the existing Python virtual environment setup from `primeshield_backend/Dockerfile`.
+- The backend container uses the existing Python virtual environment setup from `admindashboard/Dockerfile`.
 - If you change ports or service names, update `docker-compose.yml` accordingly.

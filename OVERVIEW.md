@@ -67,7 +67,7 @@ SEO-Dashboard/
 │           ├── ar.json             # Arabic translations
 │           └── en.json             # English translations
 │
-└── primeshield_backend/            # Django / Wagtail CMS
+└── admindashboard/            # Django / Wagtail CMS
     ├── backend/
     │   ├── settings/               # base / dev / production configs
     │   ├── api.py                  # Wagtail API router (pages, images, docs)
@@ -123,7 +123,7 @@ docker compose up --build
 
 ```bash
 # Backend
-cd primeshield_backend
+cd admindashboard
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
