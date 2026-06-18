@@ -1,7 +1,0 @@
-.section{
-  background-color: var(--color-yellow);
-  background-image: url(../../../../public/assets/pattern_result.webp);
-  background-position: cover cover;
-  background-repeat: repeat-y;
-  background-size: contain;
-}

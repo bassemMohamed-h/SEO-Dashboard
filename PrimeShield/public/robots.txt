@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://primeshield.com.sa/sitemap.xml
