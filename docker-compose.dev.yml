@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: ./admindashboard
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./admindashboard:/app:cached   # live code reload
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: backend.settings.dev
+      PYTHONUNBUFFERED: "1"

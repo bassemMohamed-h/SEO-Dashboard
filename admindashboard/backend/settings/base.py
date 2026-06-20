@@ -186,7 +186,8 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 # Maximum upload size for documents in bytes.
 WAGTAILDOCS_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
 
-# CORS settings
+# CORS settings — production overrides this via CORS_ALLOWED_ORIGINS env var
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3002",
 ]
