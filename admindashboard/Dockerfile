@@ -44,6 +44,11 @@ RUN chown wagtail:wagtail /app
 
 COPY --chown=wagtail:wagtail . .
 
+# Create media sub-dirs with wagtail ownership so the named volume
+# is initialised with the right permissions on first mount.
+RUN mkdir -p /app/media/images /app/media/original_images \
+ && chown -R wagtail:wagtail /app/media
+
 USER wagtail
 
 # Collect static files using production settings.
